@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Netcode-for-GameObjects-Template-main.sln"
+    "dotnet.defaultSolution": "XR26_Netcode-for-GameObjects.sln"
 }
