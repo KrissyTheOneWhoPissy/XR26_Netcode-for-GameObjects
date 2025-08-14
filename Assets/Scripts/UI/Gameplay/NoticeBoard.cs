@@ -47,7 +47,6 @@ public class NoticeBoard : NetworkBehaviour
     private string SavePath => Path.Combine(Application.persistentDataPath, "noticeboard.json");
     private Coroutine _saveDebounce;
 
-    // Use the exact delegate type expected by NetworkList<T>
     private NetworkList<NoticeItem>.OnListChangedDelegate _onListChangedHandler;
 
     [Serializable]

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class NoticeBoardUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text listText;              // or TMP_Text if you prefer
+    [SerializeField] private TMP_Text listText;              
     [SerializeField] private TMP_InputField titleInput;
     [SerializeField] private TMP_InputField bodyInput;
     [SerializeField] private Button addButton;

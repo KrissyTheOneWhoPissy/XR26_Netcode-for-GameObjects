@@ -8,7 +8,7 @@ public struct ChatMessage : INetworkSerializable, IEquatable<ChatMessage>
 {
     public ulong SenderId;
     public FixedString64Bytes SenderName;
-    public FixedString128Bytes Text;   // or FixedString512Bytes if you prefer
+    public FixedString128Bytes Text;
     public double ServerTime;
 
     public void NetworkSerialize<T>(BufferSerializer<T> s) where T : IReaderWriter
@@ -19,7 +19,6 @@ public struct ChatMessage : INetworkSerializable, IEquatable<ChatMessage>
         s.SerializeValue(ref ServerTime);
     }
 
-    // Equality for NetworkList<T> bookkeeping
     public bool Equals(ChatMessage other) =>
         SenderId == other.SenderId &&
         ServerTime.Equals(other.ServerTime) &&
@@ -72,7 +71,7 @@ public class ChatHub : NetworkBehaviour
         if (text.Length > MaxLen) text = text.Substring(0, MaxLen);
 
         var now = NetworkManager.ServerTime.TimeAsFloat;
-        if (_lastSent.TryGetValue(senderId, out var last) && now - last < 0.4f) return; // rate limit
+        if (_lastSent.TryGetValue(senderId, out var last) && now - last < 0.4f) return;
         _lastSent[senderId] = now;
 
         var senderName = GetPlayerName(senderId);

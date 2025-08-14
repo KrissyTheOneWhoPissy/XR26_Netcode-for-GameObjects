@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 public class ChatUI : MonoBehaviour
 {
     [Header("Panel & Widgets")]
-    [SerializeField] private GameObject panel;         // left-side parent
+    [SerializeField] private GameObject panel;         
     [SerializeField] private TMP_InputField input;
     [SerializeField] private TMP_Text outputText;          
     [SerializeField] private ScrollRect scrollRect;
@@ -22,8 +22,6 @@ public class ChatUI : MonoBehaviour
 
         if (ChatHub.Instance != null)
             ChatHub.Instance.Messages.OnListChanged += _ => Redraw();
-
-        // draw any existing history
         Redraw();
     }
 
@@ -35,25 +33,21 @@ public class ChatUI : MonoBehaviour
 
 void Update()
 {
-    // If typing, ignore the toggle hotkey
     if (input && input.isFocused)
     {
-        // Allow ESC to close even while typing
         if (panel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
             Toggle(false);
-            EventSystem.current.SetSelectedGameObject(null); // unfocus input
+            EventSystem.current.SetSelectedGameObject(null);
         }
         return;
     }
 
-    // Toggle open/close with T
     if (Input.GetKeyDown(toggleKey))
     {
         Toggle(!panel.activeSelf);
     }
 
-    // Also close with ESC as fallback
     if (panel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
     {
         Toggle(false);
@@ -82,7 +76,7 @@ public void OnSend()
 
     if (ChatHub.Instance && NetworkManager.Singleton && NetworkManager.Singleton.IsConnectedClient)
     {
-        ChatHub.Instance.SendChatServerRpc(text);  // <-- direct, no Player.Local timing issues
+        ChatHub.Instance.SendChatServerRpc(text);
         input.text = "";
         input.ActivateInputField();
     }
