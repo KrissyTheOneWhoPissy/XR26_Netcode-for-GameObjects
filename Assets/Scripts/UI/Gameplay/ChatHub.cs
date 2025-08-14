@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using System;
 
-public struct ChatMessage : INetworkSerializable
+public struct ChatMessage : INetworkSerializable, IEquatable<ChatMessage>
 {
     public ulong SenderId;
     public FixedString64Bytes SenderName;
-    public FixedString128Bytes Text;
+    public FixedString128Bytes Text;   // or FixedString512Bytes if you prefer
     public double ServerTime;
 
     public void NetworkSerialize<T>(BufferSerializer<T> s) where T : IReaderWriter
@@ -16,6 +17,26 @@ public struct ChatMessage : INetworkSerializable
         s.SerializeValue(ref SenderName);
         s.SerializeValue(ref Text);
         s.SerializeValue(ref ServerTime);
+    }
+
+    // Equality for NetworkList<T> bookkeeping
+    public bool Equals(ChatMessage other) =>
+        SenderId == other.SenderId &&
+        ServerTime.Equals(other.ServerTime) &&
+        Text.Equals(other.Text);
+
+    public override bool Equals(object obj) => obj is ChatMessage other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int h = 17;
+            h = h * 23 + SenderId.GetHashCode();
+            h = h * 23 + ServerTime.GetHashCode();
+            h = h * 23 + Text.GetHashCode();
+            return h;
+        }
     }
 }
 
@@ -38,7 +59,7 @@ public class ChatHub : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         if (IsServer && Messages.Count == 0)
-            AddSystem("Welcome! Press T to open chat.");
+            AddSystem("Welcome! Press T to open chat and esc to close the chat panel!");
     }
 
     [ServerRpc(RequireOwnership = false)]

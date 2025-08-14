@@ -6,7 +6,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 [Serializable]
-public struct NoticeItem : INetworkSerializable
+public struct NoticeItem : INetworkSerializable, IEquatable<NoticeItem>
 {
     public FixedString128Bytes Title;
     public FixedString512Bytes Body;
@@ -18,6 +18,25 @@ public struct NoticeItem : INetworkSerializable
         s.SerializeValue(ref Body);
         s.SerializeValue(ref ServerTime);
     }
+
+    public bool Equals(NoticeItem other) =>
+        ServerTime.Equals(other.ServerTime) &&
+        Title.Equals(other.Title) &&
+        Body.Equals(other.Body);
+
+    public override bool Equals(object obj) => obj is NoticeItem other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int h = 17;
+            h = h * 23 + ServerTime.GetHashCode();
+            h = h * 23 + Title.GetHashCode();
+            h = h * 23 + Body.GetHashCode();
+            return h;
+        }
+    }
 }
 
 public class NoticeBoard : NetworkBehaviour
@@ -27,6 +46,9 @@ public class NoticeBoard : NetworkBehaviour
 
     private string SavePath => Path.Combine(Application.persistentDataPath, "noticeboard.json");
     private Coroutine _saveDebounce;
+
+    // Use the exact delegate type expected by NetworkList<T>
+    private NetworkList<NoticeItem>.OnListChangedDelegate _onListChangedHandler;
 
     [Serializable]
     private class NoticeDTO { public string title; public string body; public double time; }
@@ -45,7 +67,8 @@ public class NoticeBoard : NetworkBehaviour
         if (IsServer)
         {
             LoadFromDisk();
-            Items.OnListChanged += _ => DebouncedSave();
+            _onListChangedHandler = (NetworkListEvent<NoticeItem> _) => DebouncedSave();
+            Items.OnListChanged += _onListChangedHandler;
         }
     }
 
@@ -53,7 +76,8 @@ public class NoticeBoard : NetworkBehaviour
     {
         if (IsServer)
         {
-            Items.OnListChanged -= _ => DebouncedSave();
+            if (_onListChangedHandler != null)
+                Items.OnListChanged -= _onListChangedHandler;
             SaveToDisk();
         }
     }
@@ -67,6 +91,7 @@ public class NoticeBoard : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void RequestClearAllServerRpc()
     {
+        if (!IsServer) return;
         Items.Clear();
     }
 
